@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatearMoneda, formatearFechaCorta, ESTADOS_COMPONENTE } from "@/lib/utils-app";
+import { formatearMoneda, formatearFechaCorta, ESTADOS_COMPONENTE, ORIGENES, PLATAFORMAS_COMPRA } from "@/lib/utils-app";
 import { Eye, Pencil, Trash2, Search, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
@@ -32,6 +32,8 @@ type Componente = {
   modelo: string;
   numeroSerie: string | null;
   estado: string;
+  origen: string;
+  plataformaCompra: string | null;
   costoMxn: number;
   monedaCompra: string;
   fechaCompra: Date | string;
@@ -51,6 +53,7 @@ type Props = {
     categoriaId?: number;
     proveedorId?: number;
     busqueda?: string;
+    origen?: string;
   };
 };
 
@@ -73,6 +76,7 @@ export function ComponentesTable({
     if (filters.categoriaId && key !== "categoriaId") params.set("categoriaId", String(filters.categoriaId));
     if (filters.proveedorId && key !== "proveedorId") params.set("proveedorId", String(filters.proveedorId));
     if (filters.busqueda && key !== "busqueda") params.set("busqueda", filters.busqueda);
+    if (filters.origen && key !== "origen") params.set("origen", filters.origen);
 
     if (value && value !== "todos") params.set(key, value);
     params.set("page", "1");
@@ -171,6 +175,20 @@ export function ComponentesTable({
           </SelectContent>
         </Select>
 
+        <Select
+          value={filters.origen || "todos"}
+          onValueChange={(v) => updateFilter("origen", v)}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Origen" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos los orígenes</SelectItem>
+            <SelectItem value="empresa">Empresa</SelectItem>
+            <SelectItem value="personal">Personal</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Button variant="outline" onClick={handleExport}>
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Exportar
@@ -187,6 +205,8 @@ export function ComponentesTable({
               <TableHead>Modelo</TableHead>
               <TableHead>Serial</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>Origen</TableHead>
+              <TableHead>Plataforma</TableHead>
               <TableHead className="text-right">Costo MXN</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
@@ -195,7 +215,7 @@ export function ComponentesTable({
           <TableBody>
             {componentes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                   No se encontraron componentes
                 </TableCell>
               </TableRow>
@@ -212,6 +232,21 @@ export function ComponentesTable({
                       <Badge variant="outline" className={estadoInfo?.color || ""}>
                         {estadoInfo?.label || c.estado}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const origenInfo = ORIGENES[c.origen as keyof typeof ORIGENES];
+                        return (
+                          <Badge variant="outline" className={origenInfo?.color || ""}>
+                            {origenInfo?.label || c.origen}
+                          </Badge>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {c.plataformaCompra
+                        ? PLATAFORMAS_COMPRA.find((p) => p.value === c.plataformaCompra)?.label || c.plataformaCompra
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-right font-mono">{formatearMoneda(c.costoMxn)}</TableCell>
                     <TableCell className="text-xs">{formatearFechaCorta(c.fechaCompra)}</TableCell>

@@ -4,21 +4,25 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { componenteSchema, type ComponenteInput } from "@/lib/validations";
 import { calcularCostoMxn } from "@/lib/utils-app";
+import path from "path";
+import fs from "fs/promises";
 
 export async function getComponentes(params?: {
   estado?: string;
   categoriaId?: number;
   proveedorId?: number;
   busqueda?: string;
+  origen?: string;
   page?: number;
   limit?: number;
 }) {
-  const { estado, categoriaId, proveedorId, busqueda, page = 1, limit = 20 } = params || {};
+  const { estado, categoriaId, proveedorId, busqueda, origen, page = 1, limit = 20 } = params || {};
 
   const where: any = {};
   if (estado) where.estado = estado;
   if (categoriaId) where.categoriaId = categoriaId;
   if (proveedorId) where.proveedorId = proveedorId;
+  if (origen) where.origen = origen;
   if (busqueda) {
     where.OR = [
       { marca: { contains: busqueda } },
@@ -62,7 +66,27 @@ export async function getComponentesDisponibles() {
   });
 }
 
-export async function crearComponente(data: ComponenteInput) {
+async function guardarComprobante(base64Data: string, originalName: string): Promise<string> {
+  const comprobantesDir = path.join(process.cwd(), "comprobantes");
+  await fs.mkdir(comprobantesDir, { recursive: true });
+
+  const ext = path.extname(originalName) || ".pdf";
+  const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
+  const filePath = path.join(comprobantesDir, uniqueName);
+
+  // base64Data comes as "data:<mime>;base64,<data>"
+  const base64Content = base64Data.split(",")[1] || base64Data;
+  const buffer = Buffer.from(base64Content, "base64");
+  await fs.writeFile(filePath, buffer);
+
+  return uniqueName;
+}
+
+export async function crearComponente(
+  data: ComponenteInput,
+  comprobanteBase64?: string | null,
+  comprobanteNombre?: string | null
+) {
   const parsed = componenteSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
@@ -70,14 +94,41 @@ export async function crearComponente(data: ComponenteInput) {
 
   const costoMxn = calcularCostoMxn(parsed.data.costoOriginal, parsed.data.tipoCambio);
 
+  let comprobanteCompra = parsed.data.comprobanteCompra || null;
+  if (comprobanteBase64 && comprobanteNombre) {
+    comprobanteCompra = await guardarComprobante(comprobanteBase64, comprobanteNombre);
+  }
+
+  const { categoriaId, proveedorId, ensambleId, fechaCompra, ...rest } = parsed.data;
+
   await prisma.componente.create({
     data: {
-      ...parsed.data,
-      fechaCompra: new Date(parsed.data.fechaCompra),
+      marca: rest.marca,
+      modelo: rest.modelo,
+      numeroSerie: rest.numeroSerie || null,
+      foto: rest.foto || null,
+      estado: rest.estado,
+      fechaCompra: new Date(fechaCompra),
+      costoOriginal: rest.costoOriginal,
+      monedaCompra: rest.monedaCompra,
+      tipoCambio: rest.tipoCambio,
       costoMxn,
-      proveedorId: parsed.data.proveedorId || null,
-      ensambleId: parsed.data.ensambleId || null,
-      numeroSerie: parsed.data.numeroSerie || null,
+      notas: rest.notas || null,
+      origen: rest.origen,
+      plataformaCompra: rest.plataformaCompra || null,
+      capacidadValor: rest.capacidadValor || null,
+      capacidadUnidad: rest.capacidadUnidad || null,
+      vramValor: rest.vramValor || null,
+      vramUnidad: rest.vramUnidad || null,
+      velocidadValor: rest.velocidadValor || null,
+      velocidadUnidad: rest.velocidadUnidad || null,
+      socket: rest.socket || null,
+      potenciaValor: rest.potenciaValor || null,
+      potenciaUnidad: rest.potenciaUnidad || null,
+      comprobanteCompra,
+      categoria: { connect: { id: categoriaId } },
+      ...(proveedorId ? { proveedor: { connect: { id: proveedorId } } } : {}),
+      ...(ensambleId ? { ensamble: { connect: { id: ensambleId } } } : {}),
     },
   });
 
@@ -85,7 +136,12 @@ export async function crearComponente(data: ComponenteInput) {
   return { success: true };
 }
 
-export async function actualizarComponente(id: number, data: ComponenteInput) {
+export async function actualizarComponente(
+  id: number,
+  data: ComponenteInput,
+  comprobanteBase64?: string | null,
+  comprobanteNombre?: string | null
+) {
   const parsed = componenteSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
@@ -93,15 +149,46 @@ export async function actualizarComponente(id: number, data: ComponenteInput) {
 
   const costoMxn = calcularCostoMxn(parsed.data.costoOriginal, parsed.data.tipoCambio);
 
+  let comprobanteCompra = parsed.data.comprobanteCompra || null;
+  if (comprobanteBase64 && comprobanteNombre) {
+    comprobanteCompra = await guardarComprobante(comprobanteBase64, comprobanteNombre);
+  }
+
+  const { categoriaId, proveedorId, ensambleId, fechaCompra, ...rest } = parsed.data;
+
   await prisma.componente.update({
     where: { id },
     data: {
-      ...parsed.data,
-      fechaCompra: new Date(parsed.data.fechaCompra),
+      marca: rest.marca,
+      modelo: rest.modelo,
+      numeroSerie: rest.numeroSerie || null,
+      foto: rest.foto || null,
+      estado: rest.estado,
+      fechaCompra: new Date(fechaCompra),
+      costoOriginal: rest.costoOriginal,
+      monedaCompra: rest.monedaCompra,
+      tipoCambio: rest.tipoCambio,
       costoMxn,
-      proveedorId: parsed.data.proveedorId || null,
-      ensambleId: parsed.data.ensambleId || null,
-      numeroSerie: parsed.data.numeroSerie || null,
+      notas: rest.notas || null,
+      origen: rest.origen,
+      plataformaCompra: rest.plataformaCompra || null,
+      capacidadValor: rest.capacidadValor || null,
+      capacidadUnidad: rest.capacidadUnidad || null,
+      vramValor: rest.vramValor || null,
+      vramUnidad: rest.vramUnidad || null,
+      velocidadValor: rest.velocidadValor || null,
+      velocidadUnidad: rest.velocidadUnidad || null,
+      socket: rest.socket || null,
+      potenciaValor: rest.potenciaValor || null,
+      potenciaUnidad: rest.potenciaUnidad || null,
+      comprobanteCompra,
+      categoria: { connect: { id: categoriaId } },
+      ...(proveedorId
+        ? { proveedor: { connect: { id: proveedorId } } }
+        : { proveedor: { disconnect: true } }),
+      ...(ensambleId
+        ? { ensamble: { connect: { id: ensambleId } } }
+        : { ensamble: { disconnect: true } }),
     },
   });
 

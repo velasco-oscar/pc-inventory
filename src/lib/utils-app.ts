@@ -65,6 +65,22 @@ export const MONEDAS = [
   { value: "USD", label: "Dólares (USD)" },
 ] as const;
 
+export const ORIGENES = {
+  empresa: { label: "Empresa", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300" },
+  personal: { label: "Personal", color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300" },
+} as const;
+
+export const PLATAFORMAS_COMPRA = [
+  { value: "amazon", label: "Amazon" },
+  { value: "ebay", label: "eBay" },
+  { value: "mercadolibre", label: "MercadoLibre" },
+  { value: "facebook_marketplace", label: "Facebook Marketplace" },
+  { value: "temu", label: "Temu" },
+  { value: "aliexpress", label: "AliExpress" },
+  { value: "tienda_fisica", label: "Tienda Física" },
+  { value: "otro", label: "Otro" },
+] as const;
+
 export const CATEGORIAS_GASTO = [
   { value: "envio", label: "Envío" },
   { value: "servicios", label: "Servicios" },

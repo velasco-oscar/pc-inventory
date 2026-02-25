@@ -53,3 +53,5 @@ src-tauri/target/
 
 # OS
 Thumbs.db
+
+/comprobantes

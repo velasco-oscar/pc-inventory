@@ -16,10 +16,11 @@ export default async function ComponentesPage({
   const categoriaId = params.categoriaId ? parseInt(params.categoriaId) : undefined;
   const proveedorId = params.proveedorId ? parseInt(params.proveedorId) : undefined;
   const busqueda = params.busqueda || undefined;
+  const origen = params.origen || undefined;
   const page = params.page ? parseInt(params.page) : 1;
 
   const [{ componentes, total, pages }, categorias, proveedores] = await Promise.all([
-    getComponentes({ estado, categoriaId, proveedorId, busqueda, page }),
+    getComponentes({ estado, categoriaId, proveedorId, busqueda, origen, page }),
     getCategorias(),
     getProveedores(),
   ]);
@@ -43,7 +44,7 @@ export default async function ComponentesPage({
         total={total}
         pages={pages}
         currentPage={page}
-        filters={{ estado, categoriaId, proveedorId, busqueda }}
+        filters={{ estado, categoriaId, proveedorId, busqueda, origen }}
       />
     </div>
   );

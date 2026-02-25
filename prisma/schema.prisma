@@ -48,6 +48,21 @@ model Componente {
   tipoCambio     Float          @default(1.0)
   costoMxn       Float
   notas          String?
+  origen         String         @default("empresa")  // "empresa" | "personal"
+  plataformaCompra String?      // "amazon", "ebay", "mercadolibre", "facebook_marketplace", "tienda_fisica", "otro"
+
+  // Campos dinámicos según categoría (valor + unidad separados)
+  capacidadValor    Float?      // SSD/HDD/RAM - valor numérico ej: 500, 1, 16
+  capacidadUnidad   String?     // "GB" | "TB"
+  vramValor         Float?      // GPU - valor numérico ej: 8, 12
+  vramUnidad        String?     // "GB" | "TB"
+  velocidadValor    Float?      // RAM/Procesador - valor numérico ej: 3200, 3.6
+  velocidadUnidad   String?     // "MHz" | "GHz"
+  socket            String?     // Procesador / Tarjeta Madre - ej: "AM4", "LGA1700"
+  potenciaValor     Float?      // Fuente de Poder - valor numérico ej: 750
+  potenciaUnidad    String?     // "W"
+  comprobanteCompra String?     // Ruta al archivo de comprobante de compra
+
   detalleVentas  DetalleVenta[]
   garantias      Garantia[]
   createdAt      DateTime       @default(now())

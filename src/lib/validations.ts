@@ -27,6 +27,19 @@ export const componenteSchema = z.object({
   monedaCompra: z.enum(["MXN", "USD"]).default("MXN"),
   tipoCambio: z.coerce.number().min(0.01, "El tipo de cambio debe ser mayor a 0").default(1),
   notas: z.string().optional().nullable(),
+  origen: z.enum(["empresa", "personal"]).default("empresa"),
+  plataformaCompra: z.string().optional().nullable(),
+  // Campos dinámicos según categoría (valor + unidad)
+  capacidadValor: z.preprocess((v) => (v === "" || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v)), z.number().positive("La capacidad debe ser mayor a 0").nullable().optional()),
+  capacidadUnidad: z.enum(["GB", "TB"]).optional().nullable(),
+  vramValor: z.preprocess((v) => (v === "" || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v)), z.number().positive("La VRAM debe ser mayor a 0").nullable().optional()),
+  vramUnidad: z.enum(["GB", "TB"]).optional().nullable(),
+  velocidadValor: z.preprocess((v) => (v === "" || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v)), z.number().positive("La velocidad debe ser mayor a 0").nullable().optional()),
+  velocidadUnidad: z.enum(["MHz", "GHz"]).optional().nullable(),
+  socket: z.string().optional().nullable(),
+  potenciaValor: z.preprocess((v) => (v === "" || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v)), z.number().positive("La potencia debe ser mayor a 0").nullable().optional()),
+  potenciaUnidad: z.enum(["W"]).optional().nullable(),
+  comprobanteCompra: z.string().optional().nullable(),
 });
 
 export const ensambleSchema = z.object({
