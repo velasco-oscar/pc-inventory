@@ -23,9 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { useState, useTransition, useMemo, useCallback } from "react";
+import { useState, useTransition, useMemo, useCallback, useEffect } from "react";
 import {
   ArrowLeft,
   Save,
@@ -45,6 +43,7 @@ import {
   ChevronDown,
   ChevronRight,
   AlertTriangle,
+  Check,
   CheckCircle2,
   Circle,
 } from "lucide-react";
@@ -97,6 +96,7 @@ export function EnsambleForm({
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<EnsambleInput>({
     resolver: zodResolver(ensambleSchema) as any,
@@ -208,18 +208,43 @@ export function EnsambleForm({
 
   // --- Handlers ---
 
-  const toggleComponente = useCallback(
-    (id: number) => {
-      setComponenteIds((prev) => {
-        const next = prev.includes(id)
-          ? prev.filter((cid) => cid !== id)
-          : [...prev, id];
-        setValue("componenteIds", next);
-        return next;
-      });
-    },
-    [setValue]
-  );
+  const toggleComponente = useCallback((id: number) => {
+    setComponenteIds((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((cid) => cid !== id)
+        : [...prev, id];
+      return next;
+    });
+  }, []);
+
+  const shallowEqualNumbers = (a: number[] | undefined, b: number[]) => {
+    if (!a) return false;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  };
+
+  // Sync form values with local state (avoids watch()+setValue loops)
+  useEffect(() => {
+    const current = getValues("componenteIds");
+    if (!shallowEqualNumbers(current, componenteIds)) {
+      setValue("componenteIds", componenteIds, { shouldDirty: true, shouldValidate: false });
+    }
+  }, [componenteIds, getValues, setValue]);
+
+  useEffect(() => {
+    const current = getValues("estado");
+    if (current !== estado) {
+      setValue("estado", estado as any, { shouldDirty: true, shouldValidate: false });
+    }
+  }, [estado, getValues, setValue]);
+
+  useEffect(() => {
+    const current = getValues("costoManoObra");
+    if (current !== costoManoObra) {
+      setValue("costoManoObra", costoManoObra, { shouldDirty: true, shouldValidate: false });
+    }
+  }, [costoManoObra, getValues, setValue]);
 
   const toggleSeccion = (cat: string) => {
     setSeccionesAbiertas((prev) => {
@@ -312,7 +337,6 @@ export function EnsambleForm({
                   value={estado}
                   onValueChange={(v) => {
                     setEstado(v);
-                    setValue("estado", v as any);
                   }}
                 >
                   <SelectTrigger>
@@ -438,7 +462,7 @@ export function EnsambleForm({
               )}
 
               {/* Grouped component list */}
-              <ScrollArea className="h-[460px] rounded-md border">
+              <div className="h-[460px] rounded-md border overflow-y-auto">
                 {componentesFiltrados.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
                     No hay componentes que coincidan con los filtros
@@ -511,12 +535,17 @@ export function EnsambleForm({
                                       }`}
                                       onClick={() => toggleComponente(c.id)}
                                     >
-                                      <Checkbox
-                                        checked={seleccionado}
-                                        onCheckedChange={() =>
-                                          toggleComponente(c.id)
-                                        }
-                                      />
+                                      <div
+                                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border shadow-xs transition-colors ${
+                                          seleccionado
+                                            ? "bg-primary border-primary text-primary-foreground"
+                                            : "border-input"
+                                        }`}
+                                      >
+                                        {seleccionado && (
+                                          <Check className="h-3 w-3" />
+                                        )}
+                                      </div>
                                       <div className="flex-1 min-w-0">
                                         <p className="font-medium text-sm truncate">
                                           {c.marca} {c.modelo}
@@ -555,7 +584,7 @@ export function EnsambleForm({
                     )}
                   </div>
                 )}
-              </ScrollArea>
+              </div>
             </CardContent>
           </Card>
 
