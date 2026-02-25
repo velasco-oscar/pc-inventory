@@ -189,7 +189,6 @@ export function VentaDetalle({ venta }: Props) {
                   <TableHead>Item</TableHead>
                   <TableHead>Vencimiento</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead>Condiciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -204,7 +203,6 @@ export function VentaDetalle({ venta }: Props) {
                     <TableCell>
                       <Badge variant="outline">{g.estado}</Badge>
                     </TableCell>
-                    <TableCell className="text-sm">{g.condiciones}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

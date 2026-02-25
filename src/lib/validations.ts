@@ -81,17 +81,16 @@ export const ventaSchema = z.object({
   // Garantía opcional
   incluirGarantia: z.boolean().default(false),
   garantiaFechaFin: z.string().optional().nullable(),
-  garantiaCondiciones: z.string().optional().nullable(),
   garantiaNotas: z.string().optional().nullable(),
 }).refine(
   (data) => {
     if (data.incluirGarantia) {
-      return !!data.garantiaFechaFin && !!data.garantiaCondiciones;
+      return !!data.garantiaFechaFin;
     }
     return true;
   },
   {
-    message: "Fecha fin y condiciones son requeridas para la garantía",
+    message: "La fecha de vencimiento es requerida para la garantía",
     path: ["garantiaFechaFin"],
   }
 );
@@ -102,7 +101,7 @@ export const garantiaSchema = z.object({
   ensambleId: z.coerce.number().optional().nullable(),
   fechaInicio: z.string().min(1, "La fecha de inicio es requerida"),
   fechaFin: z.string().min(1, "La fecha de fin es requerida"),
-  condiciones: z.string().min(1, "Las condiciones son requeridas"),
+  condiciones: z.string().default("Garantía limitada sujeta a los términos y condiciones del vendedor."),
   estado: z.enum(["vigente", "vencida", "reclamada"]).default("vigente"),
   notas: z.string().optional().nullable(),
 });

@@ -30,8 +30,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { Search, MoreHorizontal, Trash2, ShieldCheck, AlertTriangle, XCircle } from "lucide-react";
+import { Search, MoreHorizontal, Trash2, ShieldCheck, AlertTriangle, XCircle, Printer } from "lucide-react";
 import { differenceInDays, isPast } from "date-fns";
+import { GarantiaPrint } from "@/components/garantia-print";
 
 type Props = {
   garantias: any[];
@@ -228,6 +229,15 @@ export function GarantiasTable({ garantias }: Props) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <GarantiaPrint
+                            garantia={g}
+                            trigger={
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Printer className="mr-2 h-4 w-4" /> Imprimir Garantía
+                              </DropdownMenuItem>
+                            }
+                          />
+                          <DropdownMenuSeparator />
                           {g.estado === "vigente" && (
                             <>
                               <DropdownMenuItem

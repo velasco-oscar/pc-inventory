@@ -54,7 +54,6 @@ export function VentaForm({ clientes, componentesDisponibles, ensamblesDisponibl
       detalles: [],
       incluirGarantia: false,
       garantiaFechaFin: "",
-      garantiaCondiciones: "",
       garantiaNotas: "",
     },
   });
@@ -397,7 +396,7 @@ export function VentaForm({ clientes, componentesDisponibles, ensamblesDisponibl
           {watch("incluirGarantia") && (
             <div className="grid gap-4 sm:grid-cols-2 pt-2">
               <div className="space-y-2">
-                <Label>Fecha fin de garantía *</Label>
+                <Label>Fecha de vencimiento *</Label>
                 <Input type="date" {...register("garantiaFechaFin")} />
                 {errors.garantiaFechaFin && (
                   <p className="text-sm text-destructive">{errors.garantiaFechaFin.message}</p>
@@ -405,19 +404,8 @@ export function VentaForm({ clientes, componentesDisponibles, ensamblesDisponibl
               </div>
 
               <div className="space-y-2">
-                <Label>Condiciones *</Label>
-                <Input
-                  {...register("garantiaCondiciones")}
-                  placeholder="Ej: 1 año por defectos de fábrica"
-                />
-                {errors.garantiaCondiciones && (
-                  <p className="text-sm text-destructive">{errors.garantiaCondiciones.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2 sm:col-span-2">
                 <Label>Notas de garantía</Label>
-                <Textarea
+                <Input
                   {...register("garantiaNotas")}
                   placeholder="Notas adicionales sobre la garantía..."
                 />
