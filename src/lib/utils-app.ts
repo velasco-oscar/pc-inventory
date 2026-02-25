@@ -47,6 +47,27 @@ export const ESTADOS_ENSAMBLE = {
   vendido: { label: "Vendido", color: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300" },
 } as const;
 
+// Build checklist config — defines required/optional component categories for a PC build
+export type BuildSlot = {
+  categoria: string;
+  label: string;
+  requerido: boolean;
+  max: number | null; // null = unlimited
+  icon: string; // emoji for quick visual
+};
+
+export const BUILD_CHECKLIST: BuildSlot[] = [
+  { categoria: "Tarjeta Madre", label: "Tarjeta Madre", requerido: true, max: 1, icon: "🖥️" },
+  { categoria: "Procesador", label: "Procesador", requerido: true, max: 1, icon: "⚡" },
+  { categoria: "RAM", label: "RAM", requerido: true, max: null, icon: "🧩" },
+  { categoria: "GPU", label: "GPU", requerido: false, max: null, icon: "🎮" },
+  { categoria: "SSD", label: "Almacenamiento (SSD)", requerido: true, max: null, icon: "💾" },
+  { categoria: "HDD", label: "Almacenamiento (HDD)", requerido: false, max: null, icon: "💿" },
+  { categoria: "Fuente de Poder", label: "Fuente de Poder", requerido: true, max: 1, icon: "🔌" },
+  { categoria: "Case/Gabinete", label: "Case / Gabinete", requerido: false, max: 1, icon: "📦" },
+  { categoria: "Ventilador/Cooler", label: "Ventilador / Cooler", requerido: false, max: null, icon: "🌀" },
+];
+
 export const ESTADOS_GARANTIA = {
   vigente: { label: "Vigente", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" },
   vencida: { label: "Vencida", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },

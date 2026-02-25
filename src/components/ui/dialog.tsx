@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  "use no memo";
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 
@@ -55,6 +56,7 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  "use no memo";
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />

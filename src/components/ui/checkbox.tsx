@@ -10,6 +10,7 @@ function Checkbox({
   className,
   ...props
 }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
+  "use no memo";
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
