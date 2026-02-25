@@ -78,7 +78,23 @@ export const ventaSchema = z.object({
   metodoPago: z.enum(["efectivo", "transferencia", "tarjeta", "otro"]),
   notas: z.string().optional().nullable(),
   detalles: z.array(detalleVentaSchema).min(1, "Agrega al menos un item"),
-});
+  // Garantía opcional
+  incluirGarantia: z.boolean().default(false),
+  garantiaFechaFin: z.string().optional().nullable(),
+  garantiaCondiciones: z.string().optional().nullable(),
+  garantiaNotas: z.string().optional().nullable(),
+}).refine(
+  (data) => {
+    if (data.incluirGarantia) {
+      return !!data.garantiaFechaFin && !!data.garantiaCondiciones;
+    }
+    return true;
+  },
+  {
+    message: "Fecha fin y condiciones son requeridas para la garantía",
+    path: ["garantiaFechaFin"],
+  }
+);
 
 export const garantiaSchema = z.object({
   ventaId: z.coerce.number().min(1, "La venta es requerida"),

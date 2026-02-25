@@ -21,7 +21,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useState, useTransition, useMemo } from "react";
-import { ArrowLeft, Plus, Save, Trash2, ShoppingCart } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Plus, Save, Trash2, ShoppingCart, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 type Props = {
@@ -51,6 +52,10 @@ export function VentaForm({ clientes, componentesDisponibles, ensamblesDisponibl
       subtotal: 0,
       total: 0,
       detalles: [],
+      incluirGarantia: false,
+      garantiaFechaFin: "",
+      garantiaCondiciones: "",
+      garantiaNotas: "",
     },
   });
 
@@ -368,6 +373,63 @@ export function VentaForm({ clientes, componentesDisponibles, ensamblesDisponibl
           </CardContent>
         </Card>
       </div>
+
+      {/* Garantía */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5" />
+            Garantía
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="incluirGarantia"
+              checked={watch("incluirGarantia")}
+              onCheckedChange={(checked) => setValue("incluirGarantia", !!checked)}
+            />
+            <Label htmlFor="incluirGarantia" className="cursor-pointer">
+              Incluir garantía para los items vendidos
+            </Label>
+          </div>
+
+          {watch("incluirGarantia") && (
+            <div className="grid gap-4 sm:grid-cols-2 pt-2">
+              <div className="space-y-2">
+                <Label>Fecha fin de garantía *</Label>
+                <Input type="date" {...register("garantiaFechaFin")} />
+                {errors.garantiaFechaFin && (
+                  <p className="text-sm text-destructive">{errors.garantiaFechaFin.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Condiciones *</Label>
+                <Input
+                  {...register("garantiaCondiciones")}
+                  placeholder="Ej: 1 año por defectos de fábrica"
+                />
+                {errors.garantiaCondiciones && (
+                  <p className="text-sm text-destructive">{errors.garantiaCondiciones.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Notas de garantía</Label>
+                <Textarea
+                  {...register("garantiaNotas")}
+                  placeholder="Notas adicionales sobre la garantía..."
+                />
+              </div>
+
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                Se creará una garantía por cada item de la venta. La fecha de inicio será la fecha de venta.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="flex justify-end gap-3">
         <Link href="/ventas">

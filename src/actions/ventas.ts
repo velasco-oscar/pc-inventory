@@ -36,7 +36,7 @@ export async function crearVenta(data: VentaInput) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { detalles, ...ventaData } = parsed.data;
+  const { detalles, incluirGarantia, garantiaFechaFin, garantiaCondiciones, garantiaNotas, ...ventaData } = parsed.data;
 
   try {
     const venta = await prisma.$transaction(async (tx: any) => {
@@ -87,12 +87,31 @@ export async function crearVenta(data: VentaInput) {
         });
       }
 
+      // Create warranties if requested
+      if (incluirGarantia && garantiaFechaFin && garantiaCondiciones) {
+        const garantias = detalles.map((d: any) => ({
+          ventaId: nuevaVenta.id,
+          componenteId: d.componenteId || null,
+          ensambleId: d.ensambleId || null,
+          fechaInicio: new Date(ventaData.fechaVenta),
+          fechaFin: new Date(garantiaFechaFin),
+          condiciones: garantiaCondiciones,
+          estado: "vigente",
+          notas: garantiaNotas || null,
+        }));
+
+        for (const g of garantias) {
+          await tx.garantia.create({ data: g });
+        }
+      }
+
       return nuevaVenta;
     });
 
     revalidatePath("/ventas");
     revalidatePath("/componentes");
     revalidatePath("/ensambles");
+    revalidatePath("/garantias");
     revalidatePath("/");
     return { success: true, data: venta };
   } catch (e) {
