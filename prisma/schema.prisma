@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Categoria {
+  id          Int          @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  componentes Componente[]
+  createdAt   DateTime     @default(now())
+}
+
+model Proveedor {
+  id          Int          @id @default(autoincrement())
+  nombre      String
+  telefono    String?
+  email       String?
+  direccion   String?
+  notas       String?
+  componentes Componente[]
+  createdAt   DateTime     @default(now())
+}
+
+model Componente {
+  id             Int            @id @default(autoincrement())
+  categoriaId    Int
+  categoria      Categoria      @relation(fields: [categoriaId], references: [id])
+  marca          String
+  modelo         String
+  numeroSerie    String?        @unique
+  foto           String?
+  estado         String         @default("disponible")
+  proveedorId    Int?
+  proveedor      Proveedor?     @relation(fields: [proveedorId], references: [id])
+  ensambleId     Int?
+  ensamble       Ensamble?      @relation(fields: [ensambleId], references: [id])
+  fechaCompra    DateTime
+  costoOriginal  Float
+  monedaCompra   String         @default("MXN")
+  tipoCambio     Float          @default(1.0)
+  costoMxn       Float
+  notas          String?
+  detalleVentas  DetalleVenta[]
+  garantias      Garantia[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Ensamble {
+  id                  Int            @id @default(autoincrement())
+  nombre              String
+  foto                String?
+  componentes         Componente[]
+  costoManoObra       Float          @default(0)
+  precioVentaSugerido Float?
+  estado              String         @default("en_proceso")
+  notas               String?
+  fechaEnsamble       DateTime
+  detalleVentas       DetalleVenta[]
+  garantias           Garantia[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  telefono  String?
+  email     String?
+  direccion String?
+  notas     String?
+  ventas    Venta[]
+  createdAt DateTime @default(now())
+}
+
+model Venta {
+  id         Int            @id @default(autoincrement())
+  clienteId  Int?
+  cliente    Cliente?       @relation(fields: [clienteId], references: [id])
+  fechaVenta DateTime
+  tipoVenta  String
+  subtotal   Float
+  descuento  Float          @default(0)
+  total      Float
+  metodoPago String
+  notas      String?
+  detalles   DetalleVenta[]
+  garantias  Garantia[]
+  createdAt  DateTime       @default(now())
+}
+
+model DetalleVenta {
+  id             Int         @id @default(autoincrement())
+  ventaId        Int
+  venta          Venta       @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  componenteId   Int?
+  componente     Componente? @relation(fields: [componenteId], references: [id])
+  ensambleId     Int?
+  ensamble       Ensamble?   @relation(fields: [ensambleId], references: [id])
+  precioUnitario Float
+  cantidad       Int         @default(1)
+}
+
+model Garantia {
+  id           Int         @id @default(autoincrement())
+  ventaId      Int
+  venta        Venta       @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  componenteId Int?
+  componente   Componente? @relation(fields: [componenteId], references: [id])
+  ensambleId   Int?
+  ensamble     Ensamble?   @relation(fields: [ensambleId], references: [id])
+  fechaInicio  DateTime
+  fechaFin     DateTime
+  condiciones  String
+  estado       String      @default("vigente")
+  notas        String?
+  createdAt    DateTime    @default(now())
+}
+
+model GastoOperativo {
+  id        Int      @id @default(autoincrement())
+  concepto  String
+  monto     Float
+  fecha     DateTime
+  categoria String
+  notas     String?
+  createdAt DateTime @default(now())
+}

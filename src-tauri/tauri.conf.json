@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nickelpack/nib/main/schema/tauri-config-2.json",
+  "productName": "PC Inventory",
+  "version": "1.0.0",
+  "identifier": "com.pc-inventory.app",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../out"
+  },
+  "app": {
+    "title": "PC Inventory - Sistema de Inventario y Ventas",
+    "windows": [
+      {
+        "title": "PC Inventory",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}
