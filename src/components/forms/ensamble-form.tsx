@@ -46,8 +46,34 @@ import {
   Check,
   CheckCircle2,
   Circle,
+  CircuitBoard,
+  MemoryStick,
+  Monitor,
+  HardDrive,
+  Plug,
+  Box,
+  Fan,
+  Paperclip,
+  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
+
+const SLOT_ICONS: Record<string, LucideIcon> = {
+  "circuit-board": CircuitBoard,
+  "cpu": Cpu,
+  "memory-stick": MemoryStick,
+  "monitor": Monitor,
+  "hard-drive": HardDrive,
+  "plug": Plug,
+  "box": Box,
+  "fan": Fan,
+};
+
+function SlotIcon({ name, className }: { name: string; className?: string }) {
+  const Icon = SLOT_ICONS[name];
+  if (!Icon) return null;
+  return <Icon className={className || "h-4 w-4"} />;
+}
 
 type Props = {
   componentesDisponibles: any[];
@@ -493,7 +519,7 @@ export function EnsambleForm({
                                 <ChevronRight className="h-4 w-4 shrink-0" />
                               )}
                               {slot && (
-                                <span className="text-base">{slot.icon}</span>
+                                <SlotIcon name={slot.icon} className="h-4 w-4 text-muted-foreground" />
                               )}
                               <span>{categoria}</span>
                               <Badge
@@ -626,7 +652,7 @@ export function EnsambleForm({
                   >
                     <div className="flex items-center gap-2">
                       {statusIcon}
-                      <span className="text-base">{slot.icon}</span>
+                      <SlotIcon name={slot.icon} className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium flex-1">
                         {slot.label}
                       </span>
@@ -659,8 +685,8 @@ export function EnsambleForm({
                       </div>
                     )}
                     {slot.exceedsMax && (
-                      <p className="text-xs text-destructive mt-1 ml-6">
-                        ⚠ Máximo {slot.max} permitido
+                      <p className="text-xs text-destructive mt-1 ml-6 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" /> Máximo {slot.max} permitido
                         {slot.max === 1 ? "" : "s"}
                       </p>
                     )}
@@ -677,7 +703,7 @@ export function EnsambleForm({
               ).length > 0 && (
                 <div className="rounded-md p-2.5 border border-dashed mt-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">📎</span>
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">
                       Otros componentes
                     </span>
@@ -796,7 +822,7 @@ export function EnsambleForm({
                 key={slot.categoria}
                 className="flex items-center gap-2 rounded-md bg-amber-50 dark:bg-amber-950/30 px-3 py-2"
               >
-                <span className="text-base">{slot.icon}</span>
+                <SlotIcon name={slot.icon} className="h-4 w-4 text-amber-600" />
                 <span className="text-sm font-medium">{slot.label}</span>
                 <Badge
                   variant="outline"

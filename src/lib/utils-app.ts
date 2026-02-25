@@ -53,19 +53,19 @@ export type BuildSlot = {
   label: string;
   requerido: boolean;
   max: number | null; // null = unlimited
-  icon: string; // emoji for quick visual
+  icon: string; // lucide icon name
 };
 
 export const BUILD_CHECKLIST: BuildSlot[] = [
-  { categoria: "Tarjeta Madre", label: "Tarjeta Madre", requerido: true, max: 1, icon: "🖥️" },
-  { categoria: "Procesador", label: "Procesador", requerido: true, max: 1, icon: "⚡" },
-  { categoria: "RAM", label: "RAM", requerido: true, max: null, icon: "🧩" },
-  { categoria: "GPU", label: "GPU", requerido: false, max: null, icon: "🎮" },
-  { categoria: "SSD", label: "Almacenamiento (SSD)", requerido: true, max: null, icon: "💾" },
-  { categoria: "HDD", label: "Almacenamiento (HDD)", requerido: false, max: null, icon: "💿" },
-  { categoria: "Fuente de Poder", label: "Fuente de Poder", requerido: true, max: 1, icon: "🔌" },
-  { categoria: "Case/Gabinete", label: "Case / Gabinete", requerido: false, max: 1, icon: "📦" },
-  { categoria: "Ventilador/Cooler", label: "Ventilador / Cooler", requerido: false, max: null, icon: "🌀" },
+  { categoria: "Tarjeta Madre", label: "Tarjeta Madre", requerido: true, max: 1, icon: "circuit-board" },
+  { categoria: "Procesador", label: "Procesador", requerido: true, max: 1, icon: "cpu" },
+  { categoria: "RAM", label: "RAM", requerido: true, max: null, icon: "memory-stick" },
+  { categoria: "GPU", label: "GPU", requerido: false, max: null, icon: "monitor" },
+  { categoria: "SSD", label: "Almacenamiento (SSD)", requerido: true, max: null, icon: "hard-drive" },
+  { categoria: "HDD", label: "Almacenamiento (HDD)", requerido: false, max: null, icon: "hard-drive" },
+  { categoria: "Fuente de Poder", label: "Fuente de Poder", requerido: true, max: 1, icon: "plug" },
+  { categoria: "Case/Gabinete", label: "Case / Gabinete", requerido: false, max: 1, icon: "box" },
+  { categoria: "Ventilador/Cooler", label: "Ventilador / Cooler", requerido: false, max: null, icon: "fan" },
 ];
 
 export const ESTADOS_GARANTIA = {
