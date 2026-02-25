@@ -575,6 +575,11 @@ export function EnsambleForm({
                                       <div className="flex-1 min-w-0">
                                         <p className="font-medium text-sm truncate">
                                           {c.marca} {c.modelo}
+                                          {c.capacidadValor && (
+                                            <span className="ml-1 text-xs text-muted-foreground font-normal">
+                                              ({c.capacidadValor} {c.capacidadUnidad || "GB"})
+                                            </span>
+                                          )}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                           {c.numeroSerie &&
@@ -680,8 +685,30 @@ export function EnsambleForm({
                             className="text-xs text-muted-foreground truncate"
                           >
                             • {c.marca} {c.modelo}
+                            {c.capacidadValor && (
+                              <span className="font-medium"> — {c.capacidadValor} {c.capacidadUnidad || "GB"}</span>
+                            )}
                           </p>
                         ))}
+                        {/* Show total capacity for categories that have it (RAM, SSD, HDD) */}
+                        {["RAM", "SSD", "HDD"].includes(slot.categoria) &&
+                          slot.seleccionados.some((c: any) => c.capacidadValor) && (
+                            <p className="text-xs font-semibold text-foreground mt-1 pt-1 border-t border-dashed">
+                              Total: {(() => {
+                                let totalGB = 0;
+                                slot.seleccionados.forEach((c: any) => {
+                                  if (c.capacidadValor) {
+                                    totalGB += c.capacidadUnidad === "TB"
+                                      ? c.capacidadValor * 1024
+                                      : c.capacidadValor;
+                                  }
+                                });
+                                return totalGB >= 1024
+                                  ? `${(totalGB / 1024).toFixed(totalGB % 1024 === 0 ? 0 : 1)} TB`
+                                  : `${totalGB} GB`;
+                              })()}
+                            </p>
+                          )}
                       </div>
                     )}
                     {slot.exceedsMax && (
