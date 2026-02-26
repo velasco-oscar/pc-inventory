@@ -110,7 +110,7 @@ export const gastoOperativoSchema = z.object({
   concepto: z.string().min(1, "El concepto es requerido"),
   monto: z.coerce.number().min(0, "El monto debe ser mayor o igual a 0"),
   fecha: z.string().min(1, "La fecha es requerida"),
-  categoria: z.enum(["envio", "servicios", "herramientas", "publicidad", "otro"]),
+  categoria: z.enum(["envio", "consumibles", "servicios", "herramientas", "publicidad", "otro"]),
   notas: z.string().optional().nullable(),
 });
 

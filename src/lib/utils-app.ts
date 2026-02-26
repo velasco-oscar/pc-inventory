@@ -104,6 +104,7 @@ export const PLATAFORMAS_COMPRA = [
 
 export const CATEGORIAS_GASTO = [
   { value: "envio", label: "Envío" },
+  { value: "consumibles", label: "Consumibles" },
   { value: "servicios", label: "Servicios" },
   { value: "herramientas", label: "Herramientas" },
   { value: "publicidad", label: "Publicidad" },

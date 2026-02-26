@@ -14,7 +14,6 @@ const categorias = [
   { nombre: "Teclado", descripcion: "Teclados mecánicos y de membrana" },
   { nombre: "Mouse", descripcion: "Ratones y dispositivos señaladores" },
   { nombre: "Ventilador/Cooler", descripcion: "Sistemas de enfriamiento" },
-  { nombre: "Pasta Térmica", descripcion: "Compuestos térmicos" },
   { nombre: "Cable/Adaptador", descripcion: "Cables, adaptadores y conectores" },
   { nombre: "Otro", descripcion: "Otros componentes y accesorios" },
 ];
