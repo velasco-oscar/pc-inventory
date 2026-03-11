@@ -74,6 +74,7 @@ model Ensamble {
   nombre              String
   foto                String?
   componentes         Componente[]
+  licencias           Licencia[]
   costoManoObra       Float          @default(0)
   precioVentaSugerido Float?
   estado              String         @default("en_proceso")
@@ -83,6 +84,25 @@ model Ensamble {
   garantias           Garantia[]
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
+}
+
+model Licencia {
+  id            Int      @id @default(autoincrement())
+  ensambleId    Int
+  ensamble      Ensamble @relation(fields: [ensambleId], references: [id], onDelete: Cascade)
+  nombre        String   // ej: "Windows 11 Pro", "Office 365"
+  clave         String?  // la clave/serial de la licencia
+  tipo          String   @default("software") // "software" | "sistema_operativo" | "antivirus" | "otro"
+  costo         Float    @default(0)
+  monedaCompra  String   @default("MXN")
+  tipoCambio    Float    @default(1.0)
+  costoMxn      Float    @default(0)
+  fechaCompra   DateTime?
+  fechaExpiracion DateTime?
+  proveedor     String?
+  notas         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Cliente {

@@ -54,7 +54,11 @@ export function EnsamblesTable({ ensambles }: Props) {
       (acc: number, c: any) => acc + (c.costoOriginal * c.tipoCambio),
       0
     );
-    return costoComponentes + ensamble.costoManoObra;
+    const costoLicencias = (ensamble.licencias || []).reduce(
+      (acc: number, l: any) => acc + (l.costoMxn || 0),
+      0
+    );
+    return costoComponentes + ensamble.costoManoObra + costoLicencias;
   }
 
   const handleEliminar = (id: number, nombre: string) => {

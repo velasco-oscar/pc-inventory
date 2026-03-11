@@ -110,6 +110,7 @@ export function VentaForm({ clientes, componentesDisponibles, ensamblesDisponibl
     if (!ens) return;
     const costoTotal =
       ens.componentes.reduce((s: number, c: any) => s + c.costoOriginal * c.tipoCambio, 0) +
+      ((ens as any).licencias || []).reduce((s: number, l: any) => s + (l.costoMxn || 0), 0) +
       ens.costoManoObra;
     append({
       componenteId: null,

@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ensambleSchema, type EnsambleInput } from "@/lib/validations";
+import { ensambleSchema, type EnsambleInput, type LicenciaInput } from "@/lib/validations";
 import { crearEnsamble, actualizarEnsamble } from "@/actions/ensambles";
 import {
   formatearMoneda,
   formatearFechaInput,
   BUILD_CHECKLIST,
   ORIGENES,
+  TIPOS_LICENCIA,
+  MONEDAS,
 } from "@/lib/utils-app";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +56,13 @@ import {
   Box,
   Fan,
   Paperclip,
+  KeyRound,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  Copy,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -107,6 +116,22 @@ export function EnsambleForm({
   const [costoManoObra, setCostoManoObra] = useState<number>(
     ensamble?.costoManoObra || 0
   );
+  const [licencias, setLicencias] = useState<LicenciaInput[]>(
+    ensamble?.licencias?.map((l: any) => ({
+      id: l.id,
+      nombre: l.nombre,
+      clave: l.clave || "",
+      tipo: l.tipo,
+      costo: l.costo,
+      monedaCompra: l.monedaCompra,
+      tipoCambio: l.tipoCambio,
+      fechaCompra: l.fechaCompra ? formatearFechaInput(l.fechaCompra) : "",
+      fechaExpiracion: l.fechaExpiracion ? formatearFechaInput(l.fechaExpiracion) : "",
+      proveedor: l.proveedor || "",
+      notas: l.notas || "",
+    })) || []
+  );
+  const [clavesVisibles, setClavesVisibles] = useState<Set<number>>(new Set());
 
   // Merge available + current assembly components (when editing)
   const todosComponentes = useMemo(() => {
@@ -135,12 +160,26 @@ export function EnsambleForm({
           notas: ensamble.notas || "",
           fechaEnsamble: formatearFechaInput(ensamble.fechaEnsamble),
           componenteIds: ensamble.componentes.map((c: any) => c.id),
+          licencias: ensamble.licencias?.map((l: any) => ({
+            id: l.id,
+            nombre: l.nombre,
+            clave: l.clave || "",
+            tipo: l.tipo,
+            costo: l.costo,
+            monedaCompra: l.monedaCompra,
+            tipoCambio: l.tipoCambio,
+            fechaCompra: l.fechaCompra ? formatearFechaInput(l.fechaCompra) : "",
+            fechaExpiracion: l.fechaExpiracion ? formatearFechaInput(l.fechaExpiracion) : "",
+            proveedor: l.proveedor || "",
+            notas: l.notas || "",
+          })) || [],
         }
       : {
           estado: "en_proceso",
           costoManoObra: 0,
           fechaEnsamble: formatearFechaInput(new Date()),
           componenteIds: [],
+          licencias: [],
         },
   });
 
@@ -157,7 +196,12 @@ export function EnsambleForm({
     [componenteIds, todosComponentes]
   );
 
-  const costoTotal = costoComponentes + costoManoObra;
+  const costoLicencias = useMemo(
+    () => licencias.reduce((acc, l) => acc + (l.costo || 0) * (l.tipoCambio || 1), 0),
+    [licencias]
+  );
+
+  const costoTotal = costoComponentes + costoManoObra + costoLicencias;
 
   // All unique categories from available components
   const categoriasDisponibles = useMemo(() => {
@@ -272,6 +316,10 @@ export function EnsambleForm({
     }
   }, [costoManoObra, getValues, setValue]);
 
+  useEffect(() => {
+    setValue("licencias", licencias, { shouldDirty: true, shouldValidate: false });
+  }, [licencias, setValue]);
+
   const toggleSeccion = (cat: string) => {
     setSeccionesAbiertas((prev) => {
       const next = new Set(prev);
@@ -279,6 +327,122 @@ export function EnsambleForm({
       else next.add(cat);
       return next;
     });
+  };
+
+  // --- Licencia handlers ---
+
+  const agregarLicencia = () => {
+    setLicencias((prev) => [
+      ...prev,
+      {
+        nombre: "",
+        clave: "",
+        tipo: "software",
+        costo: 0,
+        monedaCompra: "MXN",
+        tipoCambio: 1,
+        fechaCompra: formatearFechaInput(new Date()),
+        fechaExpiracion: "",
+        proveedor: "",
+        notas: "",
+      },
+    ]);
+  };
+
+  const eliminarLicencia = (index: number) => {
+    setLicencias((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const actualizarLicencia = (index: number, campo: string, valor: any) => {
+    setLicencias((prev) =>
+      prev.map((l, i) => (i === index ? { ...l, [campo]: valor } : l))
+    );
+  };
+
+  const toggleClaveVisible = (index: number) => {
+    setClavesVisibles((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const copiarClave = (clave: string) => {
+    navigator.clipboard.writeText(clave);
+    toast.success("Clave copiada al portapapeles");
+  };
+
+  const copiarEspecificaciones = () => {
+    if (componentesSeleccionados.length === 0) {
+      toast.error("No hay componentes seleccionados");
+      return;
+    }
+
+    // Order to display specs, with custom labels for the listing
+    const specOrder: { categoria: string; label: string }[] = [
+      { categoria: "Procesador", label: "PROCESADOR" },
+      { categoria: "Tarjeta Madre", label: "TARJETA MADRE" },
+      { categoria: "RAM", label: "RAM" },
+      { categoria: "GPU", label: "GPU" },
+      { categoria: "SSD", label: "SSD" },
+      { categoria: "HDD", label: "HDD" },
+      { categoria: "Fuente de Poder", label: "FUENTE DE PODER" },
+      { categoria: "Case/Gabinete", label: "GABINETE" },
+      { categoria: "Ventilador/Cooler", label: "VENTILACIÓN" },
+    ];
+
+    const lines: string[] = ["ESPECIFICACIONES:"];
+
+    for (const spec of specOrder) {
+      const comps = componentesSeleccionados.filter(
+        (c: any) => c.categoria?.nombre === spec.categoria
+      );
+      if (comps.length === 0) continue;
+
+      for (const c of comps) {
+        let detail = `${c.marca} ${c.modelo}`;
+        // Add capacity info (RAM, SSD, HDD)
+        if (c.capacidadValor) {
+          detail += ` ${c.capacidadValor}${c.capacidadUnidad || "GB"}`;
+        }
+        // Add speed info (RAM, Procesador)
+        if (c.velocidadValor) {
+          detail += ` ${c.velocidadValor}${c.velocidadUnidad || "MHz"}`;
+        }
+        // Add VRAM (GPU)
+        if (c.vramValor) {
+          detail += ` ${c.vramValor}${c.vramUnidad || "GB"}`;
+        }
+        // Add wattage (PSU)
+        if (c.potenciaValor) {
+          detail += ` ${c.potenciaValor}${c.potenciaUnidad || "W"}`;
+        }
+        lines.push(`${spec.label}: ${detail}`);
+      }
+    }
+
+    // Add components not in the standard checklist
+    const otrosComps = componentesSeleccionados.filter(
+      (c: any) => !specOrder.some((s) => s.categoria === c.categoria?.nombre)
+    );
+    for (const c of otrosComps) {
+      const catLabel = (c.categoria?.nombre || "OTRO").toUpperCase();
+      lines.push(`${catLabel}: ${c.marca} ${c.modelo}`);
+    }
+
+    // Add licencias (Windows, Office, etc.)
+    const licConNombre = licencias.filter((l) => l.nombre);
+    if (licConNombre.length > 0) {
+      for (const l of licConNombre) {
+        const tipoLabel = TIPOS_LICENCIA.find((t) => t.value === l.tipo)?.label?.toUpperCase() || "LICENCIA";
+        lines.push(`${tipoLabel}: ${l.nombre}`);
+      }
+    }
+
+    const texto = lines.join("\n");
+    navigator.clipboard.writeText(texto);
+    toast.success("Especificaciones copiadas al portapapeles");
   };
 
   const doSubmit = (data: EnsambleInput) => {
@@ -768,6 +932,272 @@ export function EnsambleForm({
           </Card>
         </div>
 
+        {/* ─── Licencias / Claves ─── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5" />
+                Licencias / Claves
+                {licencias.length > 0 && (
+                  <Badge variant="secondary">{licencias.length}</Badge>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={agregarLicencia}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Agregar Licencia
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {licencias.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <KeyRound className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                <p className="text-sm">No hay licencias agregadas</p>
+                <p className="text-xs mt-1">
+                  Agrega licencias de Windows, Office, antivirus, etc.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {licencias.map((lic, index) => (
+                  <div
+                    key={index}
+                    className="rounded-lg border p-4 space-y-3 relative"
+                  >
+                    <div className="flex items-start justify-between">
+                      <Badge variant="outline" className="text-xs">
+                        {TIPOS_LICENCIA.find((t) => t.value === lic.tipo)?.label || lic.tipo}
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => eliminarLicencia(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      {/* Nombre */}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Nombre *</Label>
+                        <Input
+                          placeholder="ej: Windows 11 Pro"
+                          value={lic.nombre}
+                          onChange={(e) =>
+                            actualizarLicencia(index, "nombre", e.target.value)
+                          }
+                        />
+                      </div>
+
+                      {/* Tipo */}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Tipo</Label>
+                        <Select
+                          value={lic.tipo}
+                          onValueChange={(v) =>
+                            actualizarLicencia(index, "tipo", v)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIPOS_LICENCIA.map((t) => (
+                              <SelectItem key={t.value} value={t.value}>
+                                {t.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Costo */}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Costo</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={lic.costo || ""}
+                          onChange={(e) =>
+                            actualizarLicencia(
+                              index,
+                              "costo",
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </div>
+
+                      {/* Moneda + Tipo de cambio */}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Moneda</Label>
+                        <div className="flex gap-2">
+                          <Select
+                            value={lic.monedaCompra}
+                            onValueChange={(v) => {
+                              actualizarLicencia(index, "monedaCompra", v);
+                              if (v === "MXN") {
+                                actualizarLicencia(index, "tipoCambio", 1);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-[100px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {MONEDAS.map((m) => (
+                                <SelectItem key={m.value} value={m.value}>
+                                  {m.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {lic.monedaCompra === "USD" && (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="T/C"
+                              value={lic.tipoCambio || ""}
+                              onChange={(e) =>
+                                actualizarLicencia(
+                                  index,
+                                  "tipoCambio",
+                                  parseFloat(e.target.value) || 1
+                                )
+                              }
+                              className="flex-1"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Clave */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Clave / Serial</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            type={clavesVisibles.has(index) ? "text" : "password"}
+                            placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+                            value={lic.clave || ""}
+                            onChange={(e) =>
+                              actualizarLicencia(index, "clave", e.target.value)
+                            }
+                            className="pr-20 font-mono text-sm"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 shrink-0"
+                          onClick={() => toggleClaveVisible(index)}
+                        >
+                          {clavesVisibles.has(index) ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                        {lic.clave && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 shrink-0"
+                            onClick={() => copiarClave(lic.clave || "")}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Fechas + Proveedor */}
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Fecha de Compra</Label>
+                        <Input
+                          type="date"
+                          value={lic.fechaCompra || ""}
+                          onChange={(e) =>
+                            actualizarLicencia(index, "fechaCompra", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Fecha de Expiración</Label>
+                        <Input
+                          type="date"
+                          value={lic.fechaExpiracion || ""}
+                          onChange={(e) =>
+                            actualizarLicencia(index, "fechaExpiracion", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Proveedor</Label>
+                        <Input
+                          placeholder="ej: Kingsuin, Microsoft"
+                          value={lic.proveedor || ""}
+                          onChange={(e) =>
+                            actualizarLicencia(index, "proveedor", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* Notas */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Notas</Label>
+                      <Input
+                        placeholder="Notas adicionales..."
+                        value={lic.notas || ""}
+                        onChange={(e) =>
+                          actualizarLicencia(index, "notas", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Cost in MXN */}
+                    {lic.costo > 0 && (
+                      <div className="text-right text-sm text-muted-foreground">
+                        Costo MXN:{" "}
+                        <span className="font-medium text-foreground">
+                          {formatearMoneda((lic.costo || 0) * (lic.tipoCambio || 1))}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Total licencias */}
+                {licencias.length > 0 && (
+                  <div className="flex justify-end pt-2 border-t">
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Total licencias: </span>
+                      <span className="font-bold">
+                        {formatearMoneda(costoLicencias)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* ─── Sticky Cost Footer ─── */}
         <div className="sticky bottom-0 z-20 -mx-6 px-6 py-3 bg-background/95 backdrop-blur border-t shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -784,6 +1214,14 @@ export function EnsambleForm({
                   {formatearMoneda(costoManoObra)}
                 </span>
               </div>
+              {costoLicencias > 0 && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Licencias: </span>
+                  <span className="font-medium">
+                    {formatearMoneda(costoLicencias)}
+                  </span>
+                </div>
+              )}
               <div className="text-sm font-bold">
                 <span className="text-muted-foreground">Total: </span>
                 <span className="text-primary text-base">
@@ -812,6 +1250,17 @@ export function EnsambleForm({
               )}
             </div>
             <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={copiarEspecificaciones}
+                disabled={componentesSeleccionados.length === 0}
+                title="Copiar especificaciones para publicación"
+              >
+                <ClipboardList className="mr-2 h-4 w-4" />
+                Copiar Specs
+              </Button>
               <Link href="/ensambles">
                 <Button variant="outline" type="button">
                   Cancelar

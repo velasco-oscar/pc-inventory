@@ -19,7 +19,7 @@ export const componenteSchema = z.object({
   modelo: z.string().min(1, "El modelo es requerido"),
   numeroSerie: z.string().optional().nullable(),
   foto: z.string().optional().nullable(),
-  estado: z.enum(["disponible", "en_ensamble", "vendido", "defectuoso"]).default("disponible"),
+  estado: z.enum(["disponible", "en_ensamble", "vendido", "defectuoso", "devuelto"]).default("disponible"),
   proveedorId: z.coerce.number().optional().nullable(),
   ensambleId: z.coerce.number().optional().nullable(),
   fechaCompra: z.string().min(1, "La fecha de compra es requerida"),
@@ -42,6 +42,20 @@ export const componenteSchema = z.object({
   comprobanteCompra: z.string().optional().nullable(),
 });
 
+export const licenciaSchema = z.object({
+  id: z.number().optional(), // present when editing existing
+  nombre: z.string().min(1, "El nombre es requerido"),
+  clave: z.string().optional().nullable(),
+  tipo: z.enum(["software", "sistema_operativo", "antivirus", "otro"]).default("software"),
+  costo: z.coerce.number().min(0, "El costo debe ser mayor o igual a 0").default(0),
+  monedaCompra: z.enum(["MXN", "USD"]).default("MXN"),
+  tipoCambio: z.coerce.number().min(0.01, "El tipo de cambio debe ser mayor a 0").default(1),
+  fechaCompra: z.string().optional().nullable(),
+  fechaExpiracion: z.string().optional().nullable(),
+  proveedor: z.string().optional().nullable(),
+  notas: z.string().optional().nullable(),
+});
+
 export const ensambleSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido"),
   foto: z.string().optional().nullable(),
@@ -51,6 +65,7 @@ export const ensambleSchema = z.object({
   notas: z.string().optional().nullable(),
   fechaEnsamble: z.string().min(1, "La fecha de ensamble es requerida"),
   componenteIds: z.array(z.number()).min(1, "Selecciona al menos un componente"),
+  licencias: z.array(licenciaSchema).optional().default([]),
 });
 
 export const clienteSchema = z.object({
@@ -118,6 +133,7 @@ export type CategoriaInput = z.infer<typeof categoriaSchema>;
 export type ProveedorInput = z.infer<typeof proveedorSchema>;
 export type ComponenteInput = z.infer<typeof componenteSchema>;
 export type EnsambleInput = z.infer<typeof ensambleSchema>;
+export type LicenciaInput = z.infer<typeof licenciaSchema>;
 export type ClienteInput = z.infer<typeof clienteSchema>;
 export type VentaInput = z.infer<typeof ventaSchema>;
 export type GarantiaInput = z.infer<typeof garantiaSchema>;

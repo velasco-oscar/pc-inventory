@@ -203,6 +203,7 @@ export async function eliminarComponente(id: number) {
     if (!componente) return { error: "Componente no encontrado" };
     if (componente.estado === "vendido") return { error: "No se puede eliminar un componente vendido" };
     if (componente.estado === "en_ensamble") return { error: "No se puede eliminar un componente en ensamble" };
+    if (componente.estado === "devuelto") return { error: "No se puede eliminar un componente devuelto" };
 
     await prisma.componente.delete({ where: { id } });
     revalidatePath("/componentes");

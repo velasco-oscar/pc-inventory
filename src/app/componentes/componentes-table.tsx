@@ -138,6 +138,7 @@ export function ComponentesTable({
             <SelectItem value="en_ensamble">En ensamble</SelectItem>
             <SelectItem value="vendido">Vendido</SelectItem>
             <SelectItem value="defectuoso">Defectuoso</SelectItem>
+            <SelectItem value="devuelto">Devuelto</SelectItem>
           </SelectContent>
         </Select>
 

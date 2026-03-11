@@ -39,6 +39,7 @@ export const ESTADOS_COMPONENTE = {
   en_ensamble: { label: "En ensamble", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300" },
   vendido: { label: "Vendido", color: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300" },
   defectuoso: { label: "Defectuoso", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
+  devuelto: { label: "Devuelto", color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300" },
 } as const;
 
 export const ESTADOS_ENSAMBLE = {
@@ -108,5 +109,12 @@ export const CATEGORIAS_GASTO = [
   { value: "servicios", label: "Servicios" },
   { value: "herramientas", label: "Herramientas" },
   { value: "publicidad", label: "Publicidad" },
+  { value: "otro", label: "Otro" },
+] as const;
+
+export const TIPOS_LICENCIA = [
+  { value: "sistema_operativo", label: "Sistema Operativo" },
+  { value: "software", label: "Software" },
+  { value: "antivirus", label: "Antivirus" },
   { value: "otro", label: "Otro" },
 ] as const;

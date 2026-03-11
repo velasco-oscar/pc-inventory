@@ -8,6 +8,7 @@ export async function getEnsambles() {
   return prisma.ensamble.findMany({
     include: {
       componentes: { include: { categoria: true } },
+      licencias: true,
       _count: { select: { detalleVentas: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -19,6 +20,7 @@ export async function getEnsamble(id: number) {
     where: { id },
     include: {
       componentes: { include: { categoria: true, proveedor: true } },
+      licencias: true,
       detalleVentas: { include: { venta: true } },
       garantias: true,
     },
@@ -28,7 +30,7 @@ export async function getEnsamble(id: number) {
 export async function getEnsamblesDisponibles() {
   return prisma.ensamble.findMany({
     where: { estado: { in: ["en_proceso", "listo"] } },
-    include: { componentes: { include: { categoria: true } } },
+    include: { componentes: { include: { categoria: true } }, licencias: true },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -39,7 +41,7 @@ export async function crearEnsamble(data: EnsambleInput) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { componenteIds, ...rest } = parsed.data;
+  const { componenteIds, licencias, ...rest } = parsed.data;
 
   const ensamble = await prisma.$transaction(async (tx: any) => {
     const nuevo = await tx.ensamble.create({
@@ -55,6 +57,26 @@ export async function crearEnsamble(data: EnsambleInput) {
       data: { ensambleId: nuevo.id, estado: "en_ensamble" },
     });
 
+    // Create licencias
+    if (licencias && licencias.length > 0) {
+      await tx.licencia.createMany({
+        data: licencias.map((l: any) => ({
+          ensambleId: nuevo.id,
+          nombre: l.nombre,
+          clave: l.clave || null,
+          tipo: l.tipo,
+          costo: l.costo,
+          monedaCompra: l.monedaCompra,
+          tipoCambio: l.tipoCambio,
+          costoMxn: l.costo * l.tipoCambio,
+          fechaCompra: l.fechaCompra ? new Date(l.fechaCompra) : null,
+          fechaExpiracion: l.fechaExpiracion ? new Date(l.fechaExpiracion) : null,
+          proveedor: l.proveedor || null,
+          notas: l.notas || null,
+        })),
+      });
+    }
+
     return nuevo;
   });
 
@@ -69,7 +91,7 @@ export async function actualizarEnsamble(id: number, data: EnsambleInput) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { componenteIds, ...rest } = parsed.data;
+  const { componenteIds, licencias, ...rest } = parsed.data;
 
   await prisma.$transaction(async (tx: any) => {
     // Release current components
@@ -93,6 +115,36 @@ export async function actualizarEnsamble(id: number, data: EnsambleInput) {
       where: { id: { in: componenteIds } },
       data: { ensambleId: id, estado: "en_ensamble" },
     });
+
+    // Sync licencias: delete removed, update existing, create new
+    if (licencias) {
+      const existingIds = licencias.filter((l: any) => l.id).map((l: any) => l.id);
+      // Delete licencias that were removed
+      await tx.licencia.deleteMany({
+        where: { ensambleId: id, id: { notIn: existingIds } },
+      });
+      // Upsert each licencia
+      for (const l of licencias) {
+        const licData = {
+          nombre: l.nombre,
+          clave: l.clave || null,
+          tipo: l.tipo,
+          costo: l.costo,
+          monedaCompra: l.monedaCompra,
+          tipoCambio: l.tipoCambio,
+          costoMxn: l.costo * l.tipoCambio,
+          fechaCompra: l.fechaCompra ? new Date(l.fechaCompra) : null,
+          fechaExpiracion: l.fechaExpiracion ? new Date(l.fechaExpiracion) : null,
+          proveedor: l.proveedor || null,
+          notas: l.notas || null,
+        };
+        if (l.id) {
+          await tx.licencia.update({ where: { id: l.id }, data: licData });
+        } else {
+          await tx.licencia.create({ data: { ...licData, ensambleId: id } });
+        }
+      }
+    }
   });
 
   revalidatePath("/ensambles");

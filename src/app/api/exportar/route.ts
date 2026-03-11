@@ -11,7 +11,7 @@ export async function GET() {
         orderBy: { createdAt: "desc" },
       }),
       prisma.ensamble.findMany({
-        include: { componentes: { include: { categoria: true } } },
+        include: { componentes: { include: { categoria: true } }, licencias: true },
         orderBy: { createdAt: "desc" },
       }),
       prisma.venta.findMany({
@@ -53,14 +53,20 @@ export async function GET() {
         (s: number, c: any) => s + c.costoOriginal * c.tipoCambio,
         0
       );
+      const costoLic = (e.licencias || []).reduce(
+        (s: number, l: any) => s + (l.costoMxn || 0),
+        0
+      );
       return {
         ID: e.id,
         Nombre: e.nombre,
         Estado: e.estado,
         "# Componentes": e.componentes.length,
         "Costo Componentes": costoComp,
+        "# Licencias": (e.licencias || []).length,
+        "Costo Licencias": costoLic,
         "Mano de Obra": e.costoManoObra,
-        "Costo Total": costoComp + e.costoManoObra,
+        "Costo Total": costoComp + costoLic + e.costoManoObra,
         "Precio Sugerido": e.precioVentaSugerido || "",
         "Fecha Ensamble": e.fechaEnsamble.toISOString().split("T")[0],
         Notas: e.notas || "",

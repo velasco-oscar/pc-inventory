@@ -6,6 +6,7 @@ export async function getDashboardData() {
   const [
     componentesDisponibles,
     componentesTotal,
+    componentesDevueltos,
     ensamblesListos,
     ventas,
     gastos,
@@ -22,10 +23,15 @@ export async function getDashboardData() {
     prisma.componente.aggregate({
       _sum: { costoMxn: true },
     }),
+    // Componentes devueltos (dinero recuperado)
+    prisma.componente.findMany({
+      where: { estado: "devuelto" },
+      select: { costoMxn: true },
+    }),
     // Ensambles listos
     prisma.ensamble.findMany({
       where: { estado: "listo" },
-      include: { componentes: { select: { costoMxn: true } } },
+      include: { componentes: { select: { costoMxn: true } }, licencias: { select: { costoMxn: true } } },
     }),
     // Total ventas
     prisma.venta.aggregate({
@@ -72,7 +78,9 @@ export async function getDashboardData() {
     }),
   ]);
 
-  const totalInvertido = componentesTotal._sum.costoMxn || 0;
+  const totalInvertidoBruto = componentesTotal._sum.costoMxn || 0;
+  const totalDevuelto = componentesDevueltos.reduce((sum: number, c: any) => sum + c.costoMxn, 0);
+  const totalInvertido = totalInvertidoBruto - totalDevuelto;
   const totalVendido = ventas._sum.total || 0;
   const totalGastos = gastos._sum.monto || 0;
   const inventarioDisponible = componentesDisponibles.reduce((sum: number, c: any) => sum + c.costoMxn, 0);
@@ -88,7 +96,7 @@ export async function getDashboardData() {
     inventarioDisponible,
     ensamblesListos: ensamblesListos.map((e: any) => ({
       ...e,
-      costoTotal: e.componentes.reduce((sum: number, c: any) => sum + c.costoMxn, 0) + e.costoManoObra,
+      costoTotal: e.componentes.reduce((sum: number, c: any) => sum + c.costoMxn, 0) + (e.licencias || []).reduce((sum: number, l: any) => sum + (l.costoMxn || 0), 0) + e.costoManoObra,
     })),
     garantiasProximas,
     ultimasVentas,
